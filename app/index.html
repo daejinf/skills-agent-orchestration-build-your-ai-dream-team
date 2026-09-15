@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A contributor-focused overview of project health and recent activity.">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Team workspace</p>
+          <h1>Project Pulse</h1>
+          <p class="intro">A quick read on what your team is building, where help is needed, and what moved recently.</p>
+        </div>
+        <div class="header-mark" aria-hidden="true">PP</div>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-heading">
+        <div>
+          <p class="eyebrow">At a glance</p>
+          <h2 id="summary-heading">Project overview</h2>
+        </div>
+        <p id="summary-text" class="summary-text">Loading project activity…</p>
+      </section>
+
+      <section aria-labelledby="projects-heading">
+        <div class="section-heading">
+          <h2 id="projects-heading">All projects</h2>
+          <span id="project-count" class="count-label" aria-live="polite"></span>
+        </div>
+        <div id="project-grid" class="project-grid" aria-live="polite" aria-busy="true">
+          <div class="state-card loading-state">
+            <span class="loader" aria-hidden="true"></span>
+            <p>Loading project updates…</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const grid = document.querySelector("#project-grid");
+      const summaryText = document.querySelector("#summary-text");
+      const projectCount = document.querySelector("#project-count");
+
+      const statusClass = (status) => {
+        const normalized = String(status).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        return ["on-track", "at-risk", "blocked", "complete"].includes(normalized)
+          ? normalized
+          : "unknown";
+      };
+
+      const createText = (tagName, className, text) => {
+        const element = document.createElement(tagName);
+        element.className = className;
+        element.textContent = text;
+        return element;
+      };
+
+      const createMetaItem = (label, value, className) => {
+        const item = document.createElement("div");
+        item.className = "meta-item";
+        item.append(
+          createText("dt", "meta-label", label),
+          createText("dd", className, value)
+        );
+        return item;
+      };
+
+      const createProjectCard = (project) => {
+        const article = document.createElement("article");
+        article.className = "project-card";
+
+        const cardHeader = document.createElement("div");
+        cardHeader.className = "card-header";
+        const titleGroup = document.createElement("div");
+        titleGroup.append(
+          createText("p", "project-kicker", "Project"),
+          createText("h3", "project-name", project.name)
+        );
+        const status = createText("span", `badge status-badge ${statusClass(project.status)}`, project.status);
+        status.setAttribute("aria-label", `Status: ${project.status}`);
+        cardHeader.append(titleGroup, status);
+
+        const activity = document.createElement("p");
+        activity.className = "recent-activity";
+        activity.append(createText("span", "activity-label", "Recent activity"), document.createTextNode(project.recentActivity));
+
+        const metadata = document.createElement("dl");
+        metadata.className = "project-meta";
+        metadata.append(
+          createMetaItem("Owner", project.owner, "owner-value"),
+          createMetaItem("Priority", project.priority, `badge priority-badge ${statusClass(project.priority)}`)
+        );
+
+        article.append(cardHeader, activity, metadata);
+        return article;
+      };
+
+      const showState = (heading, message, stateClass) => {
+        grid.replaceChildren();
+        const state = document.createElement("div");
+        state.className = `state-card ${stateClass}`;
+        state.append(createText("h3", "state-heading", heading), createText("p", "", message));
+        grid.append(state);
+      };
+
+      const renderProjects = (data) => {
+        if (!data || typeof data !== "object" || !Array.isArray(data.projects)) {
+          throw new Error("Project data must be an object with a projects array.");
+        }
+
+        const { projects } = data;
+        const validProjects = projects.filter((project) =>
+          project && ["name", "owner", "status", "recentActivity", "priority"].every((field) =>
+            typeof project[field] === "string" && project[field].trim()
+          )
+        );
+
+        if (!validProjects.length) {
+          projectCount.textContent = "0 projects";
+          summaryText.textContent = "No project updates are available yet.";
+          showState("No projects yet", "Projects will appear here once your team adds them.", "empty-state");
+          return;
+        }
+
+        const statusCounts = validProjects.reduce((counts, project) => {
+          counts[project.status] = (counts[project.status] || 0) + 1;
+          return counts;
+        }, {});
+        const statusSummary = Object.entries(statusCounts)
+          .map(([status, count]) => `${count} ${status.toLowerCase()}`)
+          .join(" · ");
+
+        projectCount.textContent = `${validProjects.length} ${validProjects.length === 1 ? "project" : "projects"}`;
+        summaryText.textContent = `${statusSummary}. Keep the momentum going.`;
+        grid.replaceChildren(...validProjects.map(createProjectCard));
+      };
+
+      fetch("project-data.json")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Project data request failed with status ${response.status}.`);
+          }
+          return response.json();
+        })
+        .then(renderProjects)
+        .catch(() => {
+          projectCount.textContent = "Unavailable";
+          summaryText.textContent = "Project activity could not be loaded.";
+          showState("Unable to load projects", "Refresh the page or check that project-data.json is available.", "error-state");
+        })
+        .finally(() => {
+          grid.setAttribute("aria-busy", "false");
+        });
+    </script>
+  </body>
+</html>

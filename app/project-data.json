@@ -1,0 +1,46 @@
+{
+  "projects": [
+    {
+      "name": "Atlas Mobile",
+      "owner": "Maya Chen",
+      "status": "On track",
+      "recentActivity": "Android beta feedback was triaged and the navigation polish is ready for review.",
+      "priority": "High"
+    },
+    {
+      "name": "Northstar API",
+      "owner": "Julian Reyes",
+      "status": "At risk",
+      "recentActivity": "The partner sandbox is waiting on a revised authentication contract before integration can resume.",
+      "priority": "Critical"
+    },
+    {
+      "name": "Signal Research",
+      "owner": "Priya Nair",
+      "status": "On track",
+      "recentActivity": "Research interviews are complete; the team is synthesizing themes for Thursday's readout.",
+      "priority": "Medium"
+    },
+    {
+      "name": "Horizon Web",
+      "owner": "Theo Martin",
+      "status": "Complete",
+      "recentActivity": "The accessibility audit passed and the redesigned account experience shipped to production.",
+      "priority": "Low"
+    },
+    {
+      "name": "Canvas Billing",
+      "owner": "Amara Okafor",
+      "status": "Blocked",
+      "recentActivity": "Invoice export work is paused while Finance confirms the new tax-region requirements.",
+      "priority": "High"
+    },
+    {
+      "name": "Beacon Onboarding",
+      "owner": "Leo Fischer",
+      "status": "On track",
+      "recentActivity": "Activation experiments are live for the next cohort, with early results trending above the baseline.",
+      "priority": "Medium"
+    }
+  ]
+}
